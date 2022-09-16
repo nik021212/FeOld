@@ -3,6 +3,9 @@
 // <snippet_package>
 // THIS IS SAMPLE CODE ONLY - NOT MEANT FOR PRODUCTION USE
 import { BlobServiceClient, ContainerClient} from '@azure/storage-blob';
+import {progressService} from "./services/progress.service";
+import moment from 'moment';
+import uuid from 'react-uuid';
 
 const containerName = `upload`;
 const sasToken = process.env.REACT_APP_STORAGESASTOKEN;
@@ -35,21 +38,36 @@ const getBlobsInContainer = async (containerClient: ContainerClient) => {
 // </snippet_getBlobsInContainer>
 
 // <snippet_createBlobInContainer>
-const createBlobInContainer = async (containerClient: ContainerClient, file: File) => {
-  
+const createBlobInContainer = async (containerClient: ContainerClient, file: File, period: any, tipologia: string, cliente: string) => {
+  console.log(period);
+  const p = moment(period);
+  const uid = uuid();
+  const month = p.format('M');
+  const year  = p.format('YYYY');
   // create blobClient for container
-  const blobClient = containerClient.getBlockBlobClient(file.name);
+  const blobClient = containerClient.getBlockBlobClient(uid);
 
-  // set mimetype as determined from browser with file upload control
-  const options = { blobHTTPHeaders: { blobContentType: file.type } };
+  
 
   // upload file
-  await blobClient.uploadData(file, options);
+  await blobClient.uploadData(file, {
+    blockSize: 4 * 1024 * 1024, // 4MB block size
+    concurrency: 20, // 20 concurrency
+    onProgress: (ev) => {
+      console.log(`you have upload ${ev.loadedBytes} bytes`);
+      console.log((ev.loadedBytes / file.size) * 100);
+      progressService.sendProgressBar((ev.loadedBytes / file.size) * 100);
+      // this.progress = (ev.loadedBytes / this.currentFile.size) * 100;
+
+    },
+    blobHTTPHeaders: { blobContentType: file.type },
+    metadata: {anno: year, mese: month, tipologia: tipologia, cliente: cliente, uid: uid, filename: file.name}
+  });
 }
 // </snippet_createBlobInContainer>
 
 // <snippet_uploadFileToBlob>
-const uploadFileToBlob = async (file: File | null): Promise<string[]> => {
+const uploadFileToBlob = async (file: File | null, period: any, tipologia: string, cliente: string): Promise<string[]> => {
   if (!file) return [];
 
   // get BlobService = notice `?` is pulled out of sasToken - if created in Azure portal
@@ -64,7 +82,24 @@ const uploadFileToBlob = async (file: File | null): Promise<string[]> => {
   });
 
   // upload file
-  await createBlobInContainer(containerClient, file);
+  await createBlobInContainer(containerClient, file, period, tipologia, cliente);
+
+  // get list of blobs in container
+  return getBlobsInContainer(containerClient);
+};
+
+export const getContainerList = async (): Promise<string[]> => {
+
+  // get BlobService = notice `?` is pulled out of sasToken - if created in Azure portal
+  const blobService = new BlobServiceClient(
+      `https://${storageAccountName}.blob.core.windows.net/?${sasToken}`
+  );
+
+  // get Container - full public read access
+  const containerClient: ContainerClient = blobService.getContainerClient(containerName);
+  await containerClient.createIfNotExists({
+    access: 'container',
+  });
 
   // get list of blobs in container
   return getBlobsInContainer(containerClient);
