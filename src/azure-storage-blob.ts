@@ -7,7 +7,7 @@ import {progressService} from "./services/progress.service";
 import moment from 'moment';
 import uuid from 'react-uuid';
 
-const containerName = `upload`;
+const containerName = `uploader-web`;
 const sasToken = process.env.REACT_APP_STORAGESASTOKEN;
 const storageAccountName = process.env.REACT_APP_STORAGERESOURCENAME; 
 // </snippet_package>
