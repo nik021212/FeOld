@@ -135,7 +135,8 @@ const App = (): JSX.Element => {
 
   return (
     <div>
-      <h1>Metering Distributore Test Upload</h1>
+      <h1>Metering Distributore Test Upload(Only XML files)</h1>
+	  <h1><a href="https://victorious-dune-0e2566710.2.azurestaticapps.net/">to upload zip files click here</a></h1>
       {storageConfigured && !uploading && DisplayForm()}
       {storageConfigured && uploading && <div>Uploading</div>}
         {!!progressBar &&
