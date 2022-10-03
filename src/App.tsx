@@ -48,6 +48,7 @@ const App = (): JSX.Element => {
   const onFileChange = (event: any) => {
     // capture file into state
     setFileSelected(event.target.files[0]);
+    console.log(event.target.files[0].name);
   };
 
   const onTipologiaChange = (event: any) => {
@@ -135,8 +136,8 @@ const App = (): JSX.Element => {
 
   return (
     <div>
-      <h1>Metering Distributore Test Upload(Only XML files)</h1>
-	  <h1><a href="https://victorious-dune-0e2566710.2.azurestaticapps.net/">to upload zip files click here</a></h1>
+      <h1>Metering Front-End Sviluppo</h1>
+	    <h2>Caricare solo .xml e .zip</h2>
       {storageConfigured && !uploading && DisplayForm()}
       {storageConfigured && uploading && <div>Uploading</div>}
         {!!progressBar &&

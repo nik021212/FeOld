@@ -7,7 +7,9 @@ import {progressService} from "./services/progress.service";
 import moment from 'moment';
 import uuid from 'react-uuid';
 
-const containerName = `uploader-web`;
+let containerName = ``;
+const containerXml = `uploader-web`;
+const containerZip =`upload`;
 const sasToken = process.env.REACT_APP_STORAGESASTOKEN;
 const storageAccountName = process.env.REACT_APP_STORAGERESOURCENAME; 
 // </snippet_package>
@@ -66,17 +68,34 @@ const createBlobInContainer = async (containerClient: ContainerClient, file: Fil
 }
 // </snippet_createBlobInContainer>
 
+
+
+
+const checkPath = (file: File) => {
+  const x = (file.name).split('.').pop();
+  
+  const extVal = x === 'zip'||'xml' ? x : "error"; // ritorna false
+
+
+
+ return (extVal?.toLowerCase());  
+}
 // <snippet_uploadFileToBlob>
 const uploadFileToBlob = async (file: File | null, period: any, tipologia: string, cliente: string): Promise<string[]> => {
   if (!file) return [];
-
+  //const val = JSON.stringify(file);
+  console.log(" ----------test: " + checkPath(file));
   // get BlobService = notice `?` is pulled out of sasToken - if created in Azure portal
   const blobService = new BlobServiceClient(
     `https://${storageAccountName}.blob.core.windows.net/?${sasToken}`
   );
-
+   
   // get Container - full public read access
+ 
+    containerName= checkPath(file) === "xml" ? containerXml : containerZip;
+  
   const containerClient: ContainerClient = blobService.getContainerClient(containerName);
+  
   await containerClient.createIfNotExists({
     access: 'container',
   });
@@ -96,6 +115,7 @@ export const getContainerList = async (): Promise<string[]> => {
   );
 
   // get Container - full public read access
+  
   const containerClient: ContainerClient = blobService.getContainerClient(containerName);
   await containerClient.createIfNotExists({
     access: 'container',
